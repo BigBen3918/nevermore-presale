@@ -7,10 +7,11 @@ import logo from "../assets/images/logo.png";
 import sub1 from "../assets/images/first.png";
 import sub2 from "../assets/images/second.png";
 import sub3 from "../assets/images/third.png";
+import addresses from "../contract/resource/addresses.json";
 
 export default function Main() {
     const wallet = useWallet();
-    const [state, { BuyToken, getTotal }] = useBlockchainContext();
+    const [state, { BuyToken }] = useBlockchainContext();
     const [flag, setFlag] = useState(1);
     const [amount, setAmount] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -19,7 +20,7 @@ export default function Main() {
     const [restTime, setRestTime] = useState(null);
 
     useEffect(() => {
-        if (!state.terms)
+        if (state.term || state.cTime === 0)
             setRestTime({
                 day: 0,
                 hour: 0,
@@ -28,41 +29,34 @@ export default function Main() {
             });
         else {
             setRestTime({
-                day: Math.floor(state.terms.duration / (24 * 3600)),
+                day: Math.floor(state.cTime / (24 * 3600)),
                 hour: Math.floor(
-                    (state.terms.duration -
-                        Math.floor(state.terms.duration / (24 * 3600)) *
-                            3600 *
-                            24) /
+                    (state.cTime -
+                        Math.floor(state.cTime / (24 * 3600)) * 3600 * 24) /
                         3600
                 ),
                 min: Math.floor(
-                    (state.terms.duration -
-                        Math.floor(state.terms.duration / 3600) * 3600) /
-                        60
+                    (state.cTime - Math.floor(state.cTime / 3600) * 3600) / 60
                 ),
                 sec: Math.floor(
-                    state.terms.duration -
-                        (Math.floor(state.terms.duration / 3600) * 3600 +
+                    state.cTime -
+                        (Math.floor(state.cTime / 3600) * 3600 +
                             Math.floor(
                                 Math.floor(
-                                    (state.terms.duration -
-                                        Math.floor(
-                                            state.terms.duration / 3600
-                                        ) *
-                                            3600) /
+                                    (state.cTime -
+                                        Math.floor(state.cTime / 3600) * 3600) /
                                         60
                                 ) * 60
                             ))
                 ),
             });
         }
-    }, [state.terms]);
+    }, [state.cTime]);
 
     useEffect(() => {
         if (amount > 0) {
             Number(flag) === 1
-                ? setTokenAmount((amount * state.BNBPrice) / state.price)
+                ? setTokenAmount((amount * state.ETHPrice) / state.price)
                 : setTokenAmount(amount / state.price);
         } else {
             setTokenAmount(0);
@@ -100,7 +94,6 @@ export default function Main() {
             .then((res) => {
                 if (res) {
                     Toast("Successfully Buy", "success");
-                    getTotal();
                 } else {
                     Toast("Buy Failed", "error");
                 }
@@ -113,20 +106,16 @@ export default function Main() {
             });
     };
 
-    const onChangeAmount = (e) => {
-        setAmount(e.target.value);
-    };
-
     const addToken = async () => {
         if (wallet.status !== "connected") {
             Toast("Please connect wallet", "warning");
             return;
         }
 
-        let tokenAddress = "0xe329102DA0E7E135656CD72CDc983c81f27CB5B6";
-        let tokenSymbol = "XBT";
+        let tokenAddress = addresses.WD;
+        let tokenSymbol = "WD";
         let tokenDecimals = 18;
-        let tokenImage = "https://babylonswap.finance/favicon.ico";
+        let tokenImage = "https://nevervmore.netlify.app/favicon.ico";
 
         try {
             // wasAdded is a boolean. Like any RPC method, an error may be thrown.
@@ -143,7 +132,7 @@ export default function Main() {
                 },
             });
         } catch (error) {
-            console.log(error);
+            console.log(error.message);
             Toast("Failed token add", "error");
         }
     };
@@ -154,7 +143,7 @@ export default function Main() {
 
             {/* Begin Header */}
             <div className="container">
-                <a href="https://nevermoredefi.com">
+                <a href="#">
                     <div className="header">
                         <img src={logo} alt="" />
                         <h3>Nevermore</h3>
@@ -176,9 +165,11 @@ export default function Main() {
                     <div className="card">
                         <div className="presale__panel">
                             <h4>
-                                {state.terms
-                                    ? state.terms.status
-                                    : "Presale start in"}
+                                {state.term
+                                    ? "Presale Ended"
+                                    : state.cTime === 0
+                                    ? "Public Sale"
+                                    : "Private Sale"}
                             </h4>
 
                             <div className="row time">
@@ -265,8 +256,8 @@ export default function Main() {
                                                 setFlag(e.target.value)
                                             }
                                         >
-                                            <option value={1}>BNB</option>
-                                            <option value={2}>BUSD</option>
+                                            <option value={1}>ETH</option>
+                                            <option value={2}>USDC</option>
                                         </select>
                                     </div>
                                     <br />
@@ -274,7 +265,9 @@ export default function Main() {
                                         <label>Amount: </label>
                                         <input
                                             type="number"
-                                            onChange={(e) => onChangeAmount(e)}
+                                            onChange={(e) =>
+                                                setAmount(e.target.value)
+                                            }
                                         />
                                     </div>
                                     <br />
@@ -283,9 +276,12 @@ export default function Main() {
                                             <label>Token Amount: </label>
                                             <span className="color">
                                                 {state.price === null ||
-                                                state.BNBPrice === null
+                                                state.ETHPrice === null
                                                     ? "updating..."
-                                                    : tokenAmount}
+                                                    : Number(
+                                                          tokenAmount.toFixed(2)
+                                                      ).toLocaleString() +
+                                                      " WD"}
                                             </span>
                                         </div>
                                     ) : null}
@@ -385,7 +381,7 @@ export default function Main() {
 
             {/* Begin Footer */}
             <section className="footer">
-                <a href="https://babylonswap.finance">
+                <a href="#">
                     <div>
                         <img src={logo} alt="" />
                         <h3>Nevermore</h3>

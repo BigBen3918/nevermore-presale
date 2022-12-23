@@ -8,7 +8,12 @@ import React, {
 import { ethers } from "ethers";
 import { useWallet } from "use-wallet";
 
-import { PresaleContract, USDCContract, supportChainId } from "../contract";
+import {
+    PresaleContract,
+    USDCContract,
+    provider,
+    supportChainId,
+} from "../contract";
 import { toBigNum, fromBigNum } from "../utils";
 
 const BlockchainContext = createContext();
@@ -32,12 +37,13 @@ function reducer(state, { type, payload }) {
 
 const INIT_STATE = {
     signer: null,
-    price: null,
+    price: 0,
     ETHPrice: 0,
     totalSold: 0,
     totalAmount: 1000000,
-    terms: null,
     cTime: 0,
+    term: null,
+    supportChainId: supportChainId,
     interval: null,
 };
 
@@ -48,6 +54,8 @@ export default function Provider({ children }) {
     /* ------------ Wallet Section ------------- */
     useEffect(() => {
         getPrice();
+        getTotal();
+        getTime();
 
         const autoAccess = setInterval(() => {
             getTotal();
@@ -87,20 +95,67 @@ export default function Provider({ children }) {
                 payload: fromBigNum(ethPrice, 6),
             });
         } catch (err) {
-            console.log(err);
+            console.log(err.message);
         }
     };
 
     const getTotal = async () => {
-        let ethBalance = await state.signer.getBalance(PresaleContract.address);
-        let usdcBalance = await USDCContract.balanceOf(PresaleContract.address);
-        let total =
-            fromBigNum(ethBalance, 18) * state.ETHPrice +
-            fromBigNum(usdcBalance, 18);
+        try {
+            let promiseArr = [];
+            promiseArr.push(provider.getBalance(PresaleContract.address));
+            promiseArr.push(USDCContract.balanceOf(PresaleContract.address));
+            promiseArr.push(PresaleContract.isEnd());
+
+            let result = await Promise.all(promiseArr);
+
+            let total =
+                fromBigNum(result[0], 18) * state.ETHPrice +
+                fromBigNum(result[1], 18);
+
+            dispatch({
+                type: "totalSold",
+                payload: total,
+            });
+            dispatch({
+                type: "term",
+                payload: result[2],
+            });
+        } catch (err) {
+            console.log(err.message);
+        }
+    };
+
+    const getTime = async () => {
+        let promiseArr = [];
+        promiseArr.push(PresaleContract.startTime());
+        promiseArr.push(PresaleContract.terms());
+        let result = await Promise.all(promiseArr);
+        let startTime = fromBigNum(result[0], 0);
+        let duration = fromBigNum(result[1].presalePeriod, 0);
+
+        const autoTime = setInterval(() => {
+            updateTime({
+                startTime,
+                duration,
+            });
+        }, 1000);
+        return () => clearInterval(autoTime);
+    };
+
+    const updateTime = async (props) => {
+        const { startTime, duration } = props;
+        let nowTime = new Date().valueOf() / 1000;
+        let period;
+
+        if (nowTime > startTime + duration) {
+            period = 0;
+        } else {
+            period = startTime + duration - nowTime;
+        }
 
         dispatch({
-            type: "totalSold",
-            payload: total,
+            type: "cTime",
+            payload: period,
         });
     };
 
@@ -137,7 +192,10 @@ export default function Provider({ children }) {
 
     return (
         <BlockchainContext.Provider
-            value={useMemo(() => [state, { dispatch, BuyToken }], [state])}
+            value={useMemo(
+                () => [state, { dispatch, BuyToken }],
+                [state, BuyToken]
+            )}
         >
             {children}
         </BlockchainContext.Provider>

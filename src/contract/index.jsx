@@ -28,4 +28,4 @@ const PresaleContract = new ethers.Contract(
 );
 const USDCContract = new ethers.Contract(Addresses.USDC, Abis.Token, provider);
 
-export { PresaleContract, USDCContract, supportChainId };
+export { PresaleContract, USDCContract, provider, supportChainId };

@@ -24,7 +24,9 @@ $color_more: #240949;
 
 body {
     background-image: url("../images/all.png");
-    background-size: 100%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position-x: 30%;
 }
 
 .dashboard {

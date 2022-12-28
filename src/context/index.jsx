@@ -23,12 +23,6 @@ export function useBlockchainContext() {
 }
 
 function reducer(state, { type, payload }) {
-    if (type === "increaseCTime") {
-        return {
-            ...state,
-            cTime: state.cTime + 1,
-        };
-    }
     return {
         ...state,
         [type]: payload,
@@ -190,10 +184,16 @@ export default function Provider({ children }) {
         }
     };
 
+    const ClaimToken = async () => {
+        const signedPresaleContract = PresaleContract.connect(state.signer);
+        var tx = await signedPresaleContract.claim();
+        await tx.wait();
+    };
+
     return (
         <BlockchainContext.Provider
             value={useMemo(
-                () => [state, { dispatch, BuyToken }],
+                () => [state, { dispatch, BuyToken, ClaimToken }],
                 [state, BuyToken]
             )}
         >

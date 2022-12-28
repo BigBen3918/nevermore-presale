@@ -11,7 +11,7 @@ import addresses from "../contract/resource/addresses.json";
 
 export default function Main() {
     const wallet = useWallet();
-    const [state, { BuyToken }] = useBlockchainContext();
+    const [state, { BuyToken, ClaimToken }] = useBlockchainContext();
     const [flag, setFlag] = useState(1);
     const [amount, setAmount] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -104,6 +104,23 @@ export default function Main() {
                 setLoading(false);
                 Toast("Buy Failed", "error");
             });
+    };
+
+    const handleClaim = () => {
+        try {
+            setLoading(true);
+            ClaimToken()
+                .then(() => {
+                    Toast("Successfully Claimed", "success");
+                })
+                .catch((err) => {
+                    console.log(err.message);
+                    setLoading(false);
+                });
+        } catch (err) {
+            console.log(err.message);
+            setLoading(false);
+        }
     };
 
     const addToken = async () => {
@@ -296,6 +313,13 @@ export default function Main() {
                                             loading ? (
                                                 <button className="button-white">
                                                     Buying...
+                                                </button>
+                                            ) : state.term ? (
+                                                <button
+                                                    className="button-white"
+                                                    onClick={handleClaim}
+                                                >
+                                                    Claim XBT
                                                 </button>
                                             ) : (
                                                 <button

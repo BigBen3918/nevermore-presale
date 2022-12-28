@@ -312,7 +312,7 @@ export default function Main() {
                                         ) : wallet.status === "connected" ? (
                                             loading ? (
                                                 <button className="button-white">
-                                                    Buying...
+                                                    loading...
                                                 </button>
                                             ) : state.term ? (
                                                 <button

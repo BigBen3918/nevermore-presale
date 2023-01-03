@@ -55,7 +55,7 @@ export default function Main() {
 
     useEffect(() => {
         if (amount > 0) {
-            Number(flag) === 1
+            Number(flag) == 1
                 ? setTokenAmount((amount * state.ETHPrice) / state.price)
                 : setTokenAmount(amount / state.price);
         } else {
@@ -83,7 +83,7 @@ export default function Main() {
             return;
         }
         if (Number(wallet.chainId) !== state.supportChainId) {
-            Toast("Please use Smart Chain", "warning");
+            Toast("Please select Ethereum Mainnet", "warning");
             return;
         }
         setLoading(true);
@@ -100,7 +100,7 @@ export default function Main() {
                 setLoading(false);
             })
             .catch((err) => {
-                console.log(err);
+                console.log(err.message);
                 setLoading(false);
                 Toast("Buy Failed", "error");
             });
@@ -319,14 +319,14 @@ export default function Main() {
                                                     className="button-white"
                                                     onClick={handleClaim}
                                                 >
-                                                    Claim XBT
+                                                    Claim WD
                                                 </button>
                                             ) : (
                                                 <button
                                                     className="button-white"
                                                     onClick={handleBuy}
                                                 >
-                                                    Buy XBT Now
+                                                    Buy WD Now
                                                 </button>
                                             )
                                         ) : (
@@ -411,7 +411,7 @@ export default function Main() {
                         <h3>Nevermore</h3>
                     </div>
                 </a>
-                <p>Copyright &copy; 2022</p>
+                <p>Copyright &copy; {new Date().getFullYear()}</p>
             </section>
             {/* End Footer */}
         </div>

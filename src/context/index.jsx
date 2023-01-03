@@ -77,16 +77,19 @@ export default function Provider({ children }) {
 
     const getPrice = async () => {
         try {
-            let price = await PresaleContract.getPrice();
-            let ethPrice = await PresaleContract.ethPrice();
+            let promiseArr = [];
+            promiseArr.push(PresaleContract.getPrice());
+            promiseArr.push(PresaleContract.ethPrice());
+
+            let result = await Promise.all(promiseArr);
 
             dispatch({
                 type: "price",
-                payload: fromBigNum(price, 6),
+                payload: fromBigNum(result[0], 6),
             });
             dispatch({
                 type: "ETHPrice",
-                payload: fromBigNum(ethPrice, 6),
+                payload: fromBigNum(result[1], 6),
             });
         } catch (err) {
             console.log(err.message);
@@ -99,11 +102,12 @@ export default function Provider({ children }) {
             promiseArr.push(provider.getBalance(PresaleContract.address));
             promiseArr.push(USDCContract.balanceOf(PresaleContract.address));
             promiseArr.push(PresaleContract.isEnd());
+            promiseArr.push(PresaleContract.ethPrice());
 
             let result = await Promise.all(promiseArr);
 
             let total =
-                fromBigNum(result[0], 18) * state.ETHPrice +
+                fromBigNum(result[0], 18) * fromBigNum(result[3], 6) +
                 fromBigNum(result[1], 18);
 
             dispatch({
@@ -157,14 +161,13 @@ export default function Provider({ children }) {
     const BuyToken = async (props) => {
         try {
             const { amount, flag } = props;
-
             const signedPresaleContract = PresaleContract.connect(state.signer);
-            if (flag === 1) {
+            if (flag == 1) {
                 let tx = await signedPresaleContract.buyETH({
                     value: toBigNum(amount),
                 });
                 await tx.wait();
-            } else {
+            } else if (flag == 2) {
                 let signedUSDCContract = USDCContract.connect(state.signer);
                 let tx = await signedUSDCContract.approve(
                     PresaleContract.address,

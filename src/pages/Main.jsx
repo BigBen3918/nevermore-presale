@@ -181,6 +181,10 @@ export default function Main() {
                     {/* Begin Presale Card */}
                     <div className="card">
                         <div className="presale__panel">
+                            <div className="badge">
+                                <div>KYC</div>
+                                <div>AUDITED</div>
+                            </div>
                             <h4>
                                 {state.term
                                     ? "Presale Ended"

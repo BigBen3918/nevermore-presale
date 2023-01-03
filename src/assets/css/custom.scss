@@ -45,6 +45,21 @@ body {
     }
 }
 
+.badge {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 20px;
+
+    > div {
+        padding: 8px;
+        font-weight: bold;
+        background-color: rgb(0, 105, 0);
+        border-radius: 10px;
+    }
+}
+
 .card {
     display: flex;
     justify-content: center;
